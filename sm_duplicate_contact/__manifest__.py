@@ -47,7 +47,7 @@ Website: https://extension.mybroadcast.online
     "support": "developer.lifetips@gmail.com",
 
     "category": "Sales/CRM",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.2.0",
     "license": "LGPL-3",
 
     "depends": [
@@ -66,6 +66,12 @@ Website: https://extension.mybroadcast.online
         "views/res_config_settings_views.xml",
         "views/menu_views.xml",
     ],
+
+    "assets": {
+        "web.assets_backend": [
+            "sm_duplicate_contact/static/src/css/duplicate_contact.css",
+        ],
+    },
 
     "images": [
         "static/description/main_screenshot.png",

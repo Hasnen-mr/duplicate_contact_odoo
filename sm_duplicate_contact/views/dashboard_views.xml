@@ -5,51 +5,54 @@
         <field name="name">duplicate.contact.dashboard.form</field>
         <field name="model">duplicate.contact.dashboard</field>
         <field name="arch" type="xml">
-            <form string="Duplicate Contact Manager" create="0" edit="0" delete="0">
+            <form string="Duplicate Contact Manager" create="0" edit="0" delete="0" class="o_sm_dashboard">
                 <sheet>
-                    <div class="oe_title">
-                        <h1>Smart Duplicate Contact Manager</h1>
-                        <p class="text-muted">
+                    <div class="oe_title mb-3">
+                        <h1 class="o_sm_dashboard_title">Smart Duplicate Contact Manager</h1>
+                        <p class="text-muted mb-0">
                             Find, review, and merge duplicate contacts across your database.
                         </p>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col-md-2 col-6 mb-3 text-center">
-                            <div class="border rounded p-3 h-100">
-                                <div class="text-muted">Total Contacts</div>
-                                <field name="total_contacts" class="fs-2 fw-bold"/>
+
+                    <div class="o_sm_kpi_row row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="o_sm_kpi_card o_sm_kpi_total">
+                                <div class="o_sm_kpi_icon"><i class="fa fa-users"/></div>
+                                <div class="o_sm_kpi_label">Total Contacts</div>
+                                <field name="total_contacts" class="o_sm_kpi_value"/>
                             </div>
                         </div>
-                        <div class="col-md-2 col-6 mb-3 text-center">
-                            <div class="border rounded p-3 h-100">
-                                <div class="text-muted">Duplicates Found</div>
-                                <field name="duplicates_found" class="fs-2 fw-bold text-danger"/>
+                        <div class="col-md-3 col-6">
+                            <div class="o_sm_kpi_card o_sm_kpi_duplicates">
+                                <div class="o_sm_kpi_icon"><i class="fa fa-clone"/></div>
+                                <div class="o_sm_kpi_label">Duplicates Found</div>
+                                <field name="duplicates_found" class="o_sm_kpi_value"/>
                             </div>
                         </div>
-                        <div class="col-md-2 col-6 mb-3 text-center">
-                            <div class="border rounded p-3 h-100">
-                                <div class="text-muted">Need Review</div>
-                                <field name="need_review" class="fs-2 fw-bold text-warning"/>
+                        <div class="col-md-3 col-6">
+                            <div class="o_sm_kpi_card o_sm_kpi_review">
+                                <div class="o_sm_kpi_icon"><i class="fa fa-eye"/></div>
+                                <div class="o_sm_kpi_label">Need Review</div>
+                                <field name="need_review" class="o_sm_kpi_value"/>
                             </div>
                         </div>
-                        <div class="col-md-2 col-6 mb-3 text-center">
-                            <div class="border rounded p-3 h-100">
-                                <div class="text-muted">Merged</div>
-                                <field name="merged_count" class="fs-2 fw-bold text-success"/>
-                            </div>
-                        </div>
-                        <div class="col-md-2 col-6 mb-3 text-center">
-                            <div class="border rounded p-3 h-100">
-                                <div class="text-muted">Ignored</div>
-                                <field name="ignored_count" class="fs-2 fw-bold"/>
+                        <div class="col-md-3 col-6">
+                            <div class="o_sm_kpi_card o_sm_kpi_merged">
+                                <div class="o_sm_kpi_icon"><i class="fa fa-check-circle"/></div>
+                                <div class="o_sm_kpi_label">Merged</div>
+                                <field name="merged_count" class="o_sm_kpi_value"/>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3">
-                        <button name="action_run_scan" type="object" string="Run Scan Now" class="btn btn-primary"/>
+
+                    <div class="o_sm_dashboard_actions d-flex flex-wrap gap-2 align-items-center">
+                        <button name="action_run_scan" type="object" string="Run Scan Now" class="btn btn-primary o_sm_btn_primary"/>
                         <button name="action_open_duplicates" type="object" string="Review Duplicates" class="btn btn-secondary"/>
                         <button name="action_open_review" type="object" string="Need Review" class="btn btn-secondary"/>
                         <button name="action_open_merged" type="object" string="Merge History" class="btn btn-link"/>
+                        <span class="text-muted ms-auto small" invisible="ignored_count == 0">
+                            Ignored: <field name="ignored_count" class="oe_inline"/>
+                        </span>
                     </div>
                 </sheet>
             </form>

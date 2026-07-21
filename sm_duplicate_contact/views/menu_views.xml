@@ -22,7 +22,7 @@
               sequence="10"/>
 
     <menuitem id="menu_duplicate_contact_review"
-              name="Duplicate Review"
+              name="Duplicate Pairs"
               parent="menu_duplicate_contact_root"
               action="action_duplicate_contact_pairs"
               sequence="20"/>

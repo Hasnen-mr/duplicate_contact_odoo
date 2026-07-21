@@ -5,48 +5,235 @@
         <field name="name">duplicate.contact.merge.wizard.form</field>
         <field name="model">duplicate.contact.merge.wizard</field>
         <field name="arch" type="xml">
-            <form string="Merge Contacts">
-                <group>
-                    <field name="pair_id" invisible="1"/>
-                    <field name="partner_a_id" invisible="1"/>
-                    <field name="partner_b_id" invisible="1"/>
-                    <field name="survivor_id" widget="radio"/>
-                </group>
-                <group string="Choose field values">
-                    <group>
-                        <label for="name_choice" string="Name"/>
-                        <div class="o_row">
-                            <field name="preview_name_a" readonly="1" nolabel="1"/>
-                            <span>or</span>
-                            <field name="preview_name_b" readonly="1" nolabel="1"/>
-                            <field name="name_choice" widget="radio" nolabel="1"/>
+            <form string="Merge Contacts" class="o_sm_merge_wizard">
+                <field name="pair_id" invisible="1"/>
+                <field name="partner_a_id" invisible="1"/>
+                <field name="partner_b_id" invisible="1"/>
+                <field name="recommend_name" invisible="1"/>
+                <field name="recommend_email" invisible="1"/>
+                <field name="recommend_phone" invisible="1"/>
+                <field name="recommend_mobile" invisible="1"/>
+                <field name="recommend_street" invisible="1"/>
+                <field name="recommend_website" invisible="1"/>
+                <field name="recommend_vat" invisible="1"/>
+                <field name="recommend_function" invisible="1"/>
+                <field name="recommend_company" invisible="1"/>
+                <field name="step" invisible="1"/>
+
+                <div class="o_sm_merge_steps mb-3">
+                    <div class="o_sm_step" invisible="step != 'select'">
+                        <span class="o_sm_step_num active">1</span>
+                        <span class="o_sm_step_label active">Select Data</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num">2</span>
+                        <span class="o_sm_step_label">Review</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num">3</span>
+                        <span class="o_sm_step_label">Confirm</span>
+                    </div>
+                    <div class="o_sm_step" invisible="step != 'review'">
+                        <span class="o_sm_step_num done">1</span>
+                        <span class="o_sm_step_label done">Select Data</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num active">2</span>
+                        <span class="o_sm_step_label active">Review</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num">3</span>
+                        <span class="o_sm_step_label">Confirm</span>
+                    </div>
+                    <div class="o_sm_step" invisible="step != 'confirm'">
+                        <span class="o_sm_step_num done">1</span>
+                        <span class="o_sm_step_label done">Select Data</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num done">2</span>
+                        <span class="o_sm_step_label done">Review</span>
+                        <span class="o_sm_step_sep"/>
+                        <span class="o_sm_step_num active">3</span>
+                        <span class="o_sm_step_label active">Confirm</span>
+                    </div>
+                </div>
+
+                <div invisible="step != 'select'">
+                    <div class="o_sm_contact_cards row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="o_sm_contact_card">
+                                <div class="o_sm_badge_a">A</div>
+                                <div class="o_sm_card_name"><field name="preview_name_a" readonly="1" nolabel="1"/></div>
+                                <div class="text-muted small">
+                                    <field name="preview_function_a" readonly="1" nolabel="1"/>
+                                    <span invisible="not preview_company_a"> · </span>
+                                    <field name="preview_company_a" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="small mt-1"><field name="preview_email_a" readonly="1" nolabel="1"/></div>
+                                <div class="small"><field name="preview_phone_a" readonly="1" nolabel="1"/></div>
+                            </div>
                         </div>
-                        <label for="phone_choice" string="Phone"/>
-                        <div class="o_row">
-                            <field name="preview_phone_a" readonly="1" nolabel="1"/>
-                            <span>or</span>
-                            <field name="preview_phone_b" readonly="1" nolabel="1"/>
-                            <field name="phone_choice" widget="radio" nolabel="1"/>
+                        <div class="col-6">
+                            <div class="o_sm_contact_card">
+                                <div class="o_sm_badge_b">B</div>
+                                <div class="o_sm_card_name"><field name="preview_name_b" readonly="1" nolabel="1"/></div>
+                                <div class="text-muted small">
+                                    <field name="preview_function_b" readonly="1" nolabel="1"/>
+                                    <span invisible="not preview_company_b"> · </span>
+                                    <field name="preview_company_b" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="small mt-1"><field name="preview_email_b" readonly="1" nolabel="1"/></div>
+                                <div class="small"><field name="preview_phone_b" readonly="1" nolabel="1"/></div>
+                            </div>
                         </div>
-                        <label for="email_choice" string="Email"/>
-                        <div class="o_row">
-                            <field name="preview_email_a" readonly="1" nolabel="1"/>
-                            <span>or</span>
-                            <field name="preview_email_b" readonly="1" nolabel="1"/>
-                            <field name="email_choice" widget="radio" nolabel="1"/>
-                        </div>
+                    </div>
+
+                    <group string="Keep as master">
+                        <field name="survivor_id" widget="radio" options="{'horizontal': true}"/>
                     </group>
+
+                    <separator string="Choose which data to keep"/>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Name
+                            <span class="badge text-bg-success ms-1" invisible="recommend_name != name_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_name_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_name_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="name_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Phone
+                            <span class="badge text-bg-success ms-1" invisible="recommend_phone != phone_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_phone_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_phone_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="phone_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Email
+                            <span class="badge text-bg-success ms-1" invisible="recommend_email != email_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_email_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_email_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="email_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Title
+                            <span class="badge text-bg-success ms-1" invisible="recommend_function != function_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_function_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_function_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="function_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Company
+                            <span class="badge text-bg-success ms-1" invisible="recommend_company != company_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_company_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_company_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="company_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Mobile
+                            <span class="badge text-bg-success ms-1" invisible="recommend_mobile != mobile_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_mobile_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_mobile_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="mobile_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Street
+                            <span class="badge text-bg-success ms-1" invisible="recommend_street != street_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_street_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_street_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="street_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Website
+                            <span class="badge text-bg-success ms-1" invisible="recommend_website != website_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_website_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_website_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="website_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
+                    <div class="o_sm_choice_block">
+                        <div class="o_sm_choice_title">
+                            Tax ID
+                            <span class="badge text-bg-success ms-1" invisible="recommend_vat != vat_choice">Recommended</span>
+                        </div>
+                        <div class="o_sm_choice_values">
+                            <span class="o_sm_preview_pill">A: <field name="preview_vat_a" readonly="1" nolabel="1"/></span>
+                            <span class="o_sm_preview_pill">B: <field name="preview_vat_b" readonly="1" nolabel="1"/></span>
+                        </div>
+                        <field name="vat_choice" widget="radio" options="{'horizontal': true}" nolabel="1"/>
+                    </div>
+
                     <group>
-                        <field name="mobile_choice" widget="radio"/>
-                        <field name="street_choice" widget="radio"/>
-                        <field name="website_choice" widget="radio"/>
-                        <field name="vat_choice" widget="radio"/>
                         <field name="combine_notes"/>
+                        <field name="merge_note" placeholder="Add a note (optional)"/>
                     </group>
-                </group>
+                </div>
+
+                <div invisible="step != 'review'">
+                    <group string="Review selected values">
+                        <field name="summary_html" nolabel="1" colspan="2"/>
+                        <field name="survivor_id" readonly="1"/>
+                        <field name="combine_notes" readonly="1"/>
+                        <field name="merge_note" readonly="1"/>
+                    </group>
+                </div>
+
+                <div invisible="step != 'confirm'">
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Confirm merge</strong>
+                        <p class="mb-0 mt-2">
+                            The duplicate contact will be archived and related records will move to the master contact.
+                        </p>
+                    </div>
+                    <group>
+                        <field name="summary_html" nolabel="1" colspan="2"/>
+                    </group>
+                </div>
+
                 <footer>
-                    <button name="action_merge" type="object" string="Confirm Merge" class="btn-primary"/>
-                    <button string="Cancel" special="cancel"/>
+                    <button name="action_previous_step" type="object" string="Back"
+                            class="btn-secondary" invisible="step == 'select'"/>
+                    <button name="action_next_step" type="object" string="Review Merge →"
+                            class="btn-primary o_sm_btn_primary" invisible="step != 'select'"/>
+                    <button name="action_next_step" type="object" string="Continue →"
+                            class="btn-primary o_sm_btn_primary" invisible="step != 'review'"/>
+                    <button name="action_merge" type="object" string="Confirm Merge"
+                            class="btn-primary o_sm_btn_primary" invisible="step != 'confirm'"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
                 </footer>
             </form>
         </field>

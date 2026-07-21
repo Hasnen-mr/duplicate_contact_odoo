@@ -5,14 +5,60 @@
         <field name="name">duplicate.contact.pair.list</field>
         <field name="model">duplicate.contact.pair</field>
         <field name="arch" type="xml">
-            <list string="Duplicate Contacts" decoration-danger="confidence &gt;= 95" decoration-warning="confidence &gt;= 80 and confidence &lt; 95">
+            <list string="Duplicate Pairs"
+                  class="o_sm_pair_list"
+                  decoration-danger="confidence &gt;= 95"
+                  decoration-warning="confidence &gt;= 80 and confidence &lt; 95"
+                  create="0">
+                <field name="partner_a_id" string="Contact A"/>
+                <field name="partner_a_phone" optional="show"/>
+                <field name="partner_a_email" optional="show"/>
+                <field name="partner_b_id" string="Contact B"/>
+                <field name="partner_b_phone" optional="hide"/>
+                <field name="partner_b_email" optional="hide"/>
+                <field name="confidence" widget="progressbar" options="{'max_value': 100}"/>
+                <field name="confidence_label"
+                         widget="badge"
+                         decoration-danger="confidence_label == 'duplicate'"
+                         decoration-warning="confidence_label == 'possible'"
+                         decoration-info="confidence_label == 'low'"/>
+                <field name="state"
+                         widget="badge"
+                         decoration-warning="state == 'review'"
+                         decoration-info="state == 'open'"
+                         decoration-success="state == 'merged'"
+                         decoration-muted="state in ('ignored', 'not_duplicate')"/>
+                <field name="detection_source" optional="hide"/>
+                <button name="action_open_merge_wizard" type="object" string="Merge"
+                        class="btn-success" icon="fa-code-fork"
+                        invisible="state not in ('open', 'review')"/>
+                <button name="action_ignore" type="object" string="Ignore"
+                        icon="fa-times" class="btn-link"
+                        invisible="state not in ('open', 'review')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_duplicate_contact_pair_search" model="ir.ui.view">
+        <field name="name">duplicate.contact.pair.search</field>
+        <field name="model">duplicate.contact.pair</field>
+        <field name="arch" type="xml">
+            <search string="Duplicate Pairs">
                 <field name="partner_a_id"/>
                 <field name="partner_b_id"/>
-                <field name="confidence"/>
                 <field name="confidence_label"/>
                 <field name="state"/>
-                <field name="detection_source"/>
-            </list>
+                <filter string="Need Review" name="need_review" domain="[('state', '=', 'review')]"/>
+                <filter string="Open" name="open" domain="[('state', '=', 'open')]"/>
+                <filter string="Duplicates" name="duplicates" domain="[('confidence_label', '=', 'duplicate')]"/>
+                <filter string="Possible" name="possible" domain="[('confidence_label', '=', 'possible')]"/>
+                <separator/>
+                <filter string="Active Pairs" name="active_pairs" domain="[('state', 'in', ('open', 'review'))]"/>
+                <group>
+                    <filter string="Label" name="group_label" context="{'group_by': 'confidence_label'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
         </field>
     </record>
 
@@ -20,30 +66,176 @@
         <field name="name">duplicate.contact.pair.form</field>
         <field name="model">duplicate.contact.pair</field>
         <field name="arch" type="xml">
-            <form string="Duplicate Review">
+            <form string="Duplicate Review" create="0" class="o_sm_compare_form">
                 <header>
-                    <button name="action_open_merge_wizard" type="object" string="Merge" class="btn-primary"/>
-                    <button name="action_ignore" type="object" string="Ignore"/>
-                    <button name="action_mark_not_duplicate" type="object" string="Mark Not Duplicate"/>
-                    <field name="state" widget="statusbar"/>
+                    <button name="action_open_merge_wizard" type="object" string="Merge"
+                            class="btn-primary o_sm_btn_primary"
+                            icon="fa-code-fork"
+                            invisible="state not in ('open', 'review')"/>
+                    <button name="action_ignore" type="object" string="Ignore"
+                            icon="fa-ban"
+                            invisible="state not in ('open', 'review')"/>
+                    <button name="action_next_pair" type="object" string="Next"
+                            icon="fa-arrow-right"
+                            class="btn-secondary"/>
+                    <button name="action_mark_not_duplicate" type="object" string="Not Duplicate"
+                            invisible="state not in ('open', 'review')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="open,review,merged,ignored"/>
                 </header>
-                <sheet>
-                    <div class="oe_title">
-                        <h1>
-                            <field name="partner_a_id" readonly="1" class="oe_inline"/>
-                            <span class="text-muted"> vs </span>
-                            <field name="partner_b_id" readonly="1" class="oe_inline"/>
-                        </h1>
+                <sheet class="o_sm_compare_sheet">
+                    <div class="o_sm_compare_header">
+                        <div>
+                            <h1 class="o_sm_compare_title">Duplicate Review</h1>
+                            <div class="text-muted" invisible="not review_position">
+                                <field name="review_position" readonly="1" nolabel="1"/>
+                            </div>
+                        </div>
+                        <div class="o_sm_compare_header_meta">
+                            <field name="confidence_label" widget="badge" readonly="1"/>
+                            <field name="detection_source" readonly="1"/>
+                        </div>
                     </div>
-                    <group>
-                        <group>
-                            <field name="confidence"/>
-                            <field name="confidence_label"/>
-                            <field name="detection_source"/>
-                        </group>
-                        <group>
-                            <field name="match_reasons" nolabel="1" readonly="1"/>
-                        </group>
+
+                    <div class="o_sm_compare_grid">
+                        <!-- Contact A -->
+                        <div class="o_sm_compare_card">
+                            <div class="o_sm_compare_tag">Contact A</div>
+                            <div class="o_sm_compare_profile">
+                                <field name="partner_a_image" widget="image" class="o_sm_compare_avatar" nolabel="1"/>
+                                <div>
+                                    <div class="o_sm_compare_name">
+                                        <field name="partner_a_name" readonly="1" nolabel="1"/>
+                                    </div>
+                                    <div class="o_sm_compare_subtitle text-muted">
+                                        <field name="partner_a_function" readonly="1" nolabel="1"/>
+                                    </div>
+                                    <div class="o_sm_compare_subtitle">
+                                        <field name="partner_a_company" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_sm_compare_rows">
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-envelope"/>
+                                    <field name="partner_a_email" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-phone"/>
+                                    <field name="partner_a_phone" readonly="1" nolabel="1" placeholder="—"/>
+                                    <span invisible="not partner_a_mobile"> / </span>
+                                    <field name="partner_a_mobile" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-building"/>
+                                    <field name="partner_a_company" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-map-marker"/>
+                                    <field name="partner_a_address" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row" invisible="not partner_a_website">
+                                    <i class="fa fa-globe"/>
+                                    <field name="partner_a_website" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="o_sm_compare_row" invisible="not partner_a_vat">
+                                    <i class="fa fa-id-card-o"/>
+                                    <field name="partner_a_vat" readonly="1" nolabel="1"/>
+                                </div>
+                            </div>
+                            <button name="action_open_partner_a" type="object" string="Open Contact A"
+                                    class="btn btn-link o_sm_open_link"/>
+                        </div>
+
+                        <!-- Confidence center -->
+                        <div class="o_sm_compare_center">
+                            <div class="o_sm_confidence_title">Match Confidence</div>
+                            <field name="confidence_gauge_html" nolabel="1" readonly="1"/>
+                            <field name="match_reasons_html" nolabel="1" readonly="1"/>
+                            <button name="action_toggle_match_details" type="object"
+                                    string="View details" class="btn btn-link btn-sm"
+                                    icon="fa-chevron-down"
+                                    invisible="show_match_details"/>
+                            <button name="action_toggle_match_details" type="object"
+                                    string="Hide details" class="btn btn-link btn-sm"
+                                    icon="fa-chevron-up"
+                                    invisible="not show_match_details"/>
+                            <div invisible="not show_match_details" class="o_sm_match_details_box">
+                                <field name="match_reasons" nolabel="1" readonly="1"/>
+                                <field name="confidence" readonly="1"/>
+                            </div>
+                        </div>
+
+                        <!-- Contact B -->
+                        <div class="o_sm_compare_card">
+                            <div class="o_sm_compare_tag">Contact B</div>
+                            <div class="o_sm_compare_profile">
+                                <field name="partner_b_image" widget="image" class="o_sm_compare_avatar" nolabel="1"/>
+                                <div>
+                                    <div class="o_sm_compare_name">
+                                        <field name="partner_b_name" readonly="1" nolabel="1"/>
+                                    </div>
+                                    <div class="o_sm_compare_subtitle text-muted">
+                                        <field name="partner_b_function" readonly="1" nolabel="1"/>
+                                    </div>
+                                    <div class="o_sm_compare_subtitle">
+                                        <field name="partner_b_company" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_sm_compare_rows">
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-envelope"/>
+                                    <field name="partner_b_email" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-phone"/>
+                                    <field name="partner_b_phone" readonly="1" nolabel="1" placeholder="—"/>
+                                    <span invisible="not partner_b_mobile"> / </span>
+                                    <field name="partner_b_mobile" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-building"/>
+                                    <field name="partner_b_company" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row">
+                                    <i class="fa fa-map-marker"/>
+                                    <field name="partner_b_address" readonly="1" nolabel="1" placeholder="—"/>
+                                </div>
+                                <div class="o_sm_compare_row" invisible="not partner_b_website">
+                                    <i class="fa fa-globe"/>
+                                    <field name="partner_b_website" readonly="1" nolabel="1"/>
+                                </div>
+                                <div class="o_sm_compare_row" invisible="not partner_b_vat">
+                                    <i class="fa fa-id-card-o"/>
+                                    <field name="partner_b_vat" readonly="1" nolabel="1"/>
+                                </div>
+                            </div>
+                            <button name="action_open_partner_b" type="object" string="Open Contact B"
+                                    class="btn btn-link o_sm_open_link"/>
+                        </div>
+                    </div>
+
+                    <div class="o_sm_compare_footer">
+                        <button name="action_open_merge_wizard" type="object" string="Merge"
+                                class="btn btn-primary o_sm_btn_primary o_sm_footer_btn"
+                                icon="fa-code-fork"
+                                invisible="state not in ('open', 'review')"/>
+                        <button name="action_ignore" type="object" string="Ignore"
+                                class="btn btn-secondary o_sm_footer_btn"
+                                icon="fa-ban"
+                                invisible="state not in ('open', 'review')"/>
+                        <button name="action_next_pair" type="object" string="Next"
+                                class="btn btn-secondary o_sm_footer_btn o_sm_footer_next"
+                                icon="fa-arrow-right"/>
+                    </div>
+
+                    <!-- Hidden technical fields -->
+                    <group invisible="1">
+                        <field name="partner_a_id"/>
+                        <field name="partner_b_id"/>
+                        <field name="show_match_details"/>
+                        <field name="company_id"/>
                     </group>
                 </sheet>
             </form>
@@ -51,10 +243,19 @@
     </record>
 
     <record id="action_duplicate_contact_pairs" model="ir.actions.act_window">
-        <field name="name">Duplicate Review</field>
+        <field name="name">Duplicate Pairs</field>
         <field name="res_model">duplicate.contact.pair</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('state', 'in', ('open', 'review'))]</field>
+        <field name="context">{'search_default_active_pairs': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No duplicate pairs found
+            </p>
+            <p>
+                Run a scan from the Dashboard to detect duplicate contacts.
+            </p>
+        </field>
     </record>
 
 </odoo>

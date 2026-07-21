@@ -38,6 +38,7 @@ class DuplicateMergeService:
         combine_notes=True,
         partner_a=None,
         partner_b=None,
+        merge_note=None,
     ):
         """Merge duplicate into survivor. field_choices map fields to 'a' or 'b'."""
         field_choices = field_choices or {}
@@ -48,9 +49,11 @@ class DuplicateMergeService:
         partner_a = partner_a or survivor
         partner_b = partner_b or duplicate
 
+        def pick_partner(field):
+            return partner_a if field_choices.get(field, "a") == "a" else partner_b
+
         def pick(field):
-            source = partner_a if field_choices.get(field, "a") == "a" else partner_b
-            return getattr(source, field)
+            return getattr(pick_partner(field), field)
 
         write_vals = {
             "name": pick("name"),
@@ -62,14 +65,23 @@ class DuplicateMergeService:
             "zip": pick("zip") or survivor.zip or dup.zip,
             "website": pick("website") or survivor.website or dup.website,
             "vat": pick("vat") or survivor.vat or dup.vat,
+            "function": pick("function") or survivor.function or dup.function,
         }
+        company_source = pick_partner("company")
+        if company_source.parent_id:
+            write_vals["parent_id"] = company_source.parent_id.id
+
         if combine_notes:
             notes = []
             for p in (survivor, dup):
                 if p.comment:
                     notes.append(p.comment)
+            if merge_note:
+                notes.append(merge_note)
             if notes:
                 write_vals["comment"] = "\n\n---\n\n".join(dict.fromkeys(notes))
+        elif merge_note:
+            write_vals["comment"] = ((survivor.comment or "") + "\n\n" + merge_note).strip()
 
         survivor.write(write_vals)
         self._reassign_relations(survivor, dup)

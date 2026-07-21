@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models
+from odoo import api, fields, models, release
 from odoo.tools.misc import format_datetime
 
 DASHBOARD_PAIR_LIMIT = 20
@@ -204,4 +204,13 @@ class DuplicateContactDashboard(models.TransientModel):
             "view_mode": "form",
             "target": "current",
             "context": {"module": "sm_duplicate_contact"},
+        }
+
+    def action_open_twilio_apps(self):
+        """Open Twilio Dialer on the Odoo Apps Store for this Odoo series."""
+        series = release.major_version  # e.g. "18.0"
+        return {
+            "type": "ir.actions.act_url",
+            "url": "https://apps.odoo.com/apps/modules/%s/twilio_dialer" % series,
+            "target": "new",
         }

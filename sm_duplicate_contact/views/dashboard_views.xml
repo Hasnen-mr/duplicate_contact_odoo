@@ -10,6 +10,8 @@
                     <field name="has_pairs" invisible="1"/>
                     <field name="auto_scan_enabled" invisible="1"/>
 
+                    <div class="o_sm_dashboard_layout row g-3">
+                        <div class="o_sm_dashboard_main col-12 col-lg-8 col-xl-9">
                     <div class="oe_title mb-3">
                         <h1 class="o_sm_dashboard_title">Smart Duplicate Contact Manager</h1>
                         <p class="text-muted mb-0">
@@ -148,6 +150,46 @@
                                         invisible="state not in ('open', 'review')"/>
                             </list>
                         </field>
+                    </div>
+                        </div>
+
+                        <div class="o_sm_dashboard_sidebar col-12 col-lg-4 col-xl-3">
+                            <div class="o_sm_promo_banner">
+                                <div class="o_sm_promo_badge">Recommended</div>
+                                <div class="o_sm_promo_brand">
+                                    <span class="o_sm_promo_brand_icon">
+                                        <i class="fa fa-phone" title="Twilio Dialer"/>
+                                    </span>
+                                    <div>
+                                        <div class="o_sm_promo_eyebrow">Solutions Master</div>
+                                        <h3 class="o_sm_promo_title">Twilio Calling System</h3>
+                                    </div>
+                                </div>
+                                <p class="o_sm_promo_tagline">
+                                    VoIP softphone, auto dialer, click-to-call, recording &amp; AI transcription — inside Odoo.
+                                </p>
+                                <ul class="o_sm_promo_features">
+                                    <li><i class="fa fa-check" title="Feature"/> Browser softphone &amp; dialpad</li>
+                                    <li><i class="fa fa-check" title="Feature"/> Click-to-call from Contacts</li>
+                                    <li><i class="fa fa-check" title="Feature"/> Auto Dialer campaigns</li>
+                                    <li><i class="fa fa-check" title="Feature"/> Call recording &amp; voicemail</li>
+                                    <li><i class="fa fa-check" title="Feature"/> AI transcription &amp; summaries</li>
+                                    <li><i class="fa fa-check" title="Feature"/> CRM call logs</li>
+                                </ul>
+                                <div class="o_sm_promo_meta">
+                                    <span>Free to install</span>
+                                    <span>LGPL-3</span>
+                                </div>
+                                <button name="action_open_twilio_apps"
+                                        type="object"
+                                        string="Download Module"
+                                        class="btn o_sm_promo_cta"
+                                        icon="fa-external-link"/>
+                                <div class="o_sm_promo_footnote">
+                                    Open on Odoo Apps Store
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </sheet>
             </form>

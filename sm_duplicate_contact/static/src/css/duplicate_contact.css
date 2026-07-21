@@ -549,3 +549,163 @@
     font-weight: 600;
     color: #3d2a4a;
 }
+
+/* ── Dashboard layout + Twilio promo sidebar ─────────────── */
+
+.o_sm_dashboard .o_sm_dashboard_layout {
+    align-items: flex-start;
+}
+
+.o_sm_dashboard_sidebar {
+    position: sticky;
+    top: 12px;
+}
+
+.o_sm_promo_banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    padding: 22px 18px 18px;
+    color: #fff;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.22), transparent 45%),
+        radial-gradient(circle at 0% 100%, rgba(255, 193, 7, 0.18), transparent 40%),
+        linear-gradient(155deg, #5b2d6e 0%, #714b67 42%, #2f1b3a 100%);
+    box-shadow: 0 14px 36px rgba(71, 36, 88, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.o_sm_promo_banner::before {
+    content: "";
+    position: absolute;
+    top: -40px;
+    right: -30px;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    pointer-events: none;
+}
+
+.o_sm_promo_badge {
+    display: inline-block;
+    margin-bottom: 14px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 193, 7, 0.95);
+    color: #3d2a00;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.o_sm_promo_brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.o_sm_promo_brand_icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.16);
+    font-size: 20px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.o_sm_promo_eyebrow {
+    font-size: 11px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+}
+
+.o_sm_promo_title {
+    margin: 2px 0 0;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.25;
+    color: #fff;
+}
+
+.o_sm_promo_tagline {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.45;
+    opacity: 0.92;
+}
+
+.o_sm_promo_features {
+    list-style: none;
+    margin: 0 0 16px;
+    padding: 0;
+}
+
+.o_sm_promo_features li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 12.5px;
+    line-height: 1.35;
+    opacity: 0.95;
+}
+
+.o_sm_promo_features .fa {
+    margin-top: 2px;
+    color: #ffd666;
+    font-size: 12px;
+}
+
+.o_sm_promo_meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.o_sm_promo_meta span {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.o_sm_promo_cta {
+    width: 100%;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: #5b2d6e !important;
+    font-weight: 800 !important;
+    padding: 10px 14px !important;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.o_sm_promo_cta:hover {
+    background: #fff8e8 !important;
+    color: #3d1f4a !important;
+}
+
+.o_sm_promo_footnote {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 11px;
+    opacity: 0.75;
+}
+
+@media (max-width: 991.98px) {
+    .o_sm_dashboard_sidebar {
+        position: static;
+    }
+}

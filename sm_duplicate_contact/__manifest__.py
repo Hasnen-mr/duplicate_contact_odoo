@@ -47,7 +47,7 @@ Website: https://extension.mybroadcast.online
     "support": "developer.lifetips@gmail.com",
 
     "category": "Sales/CRM",
-    "version": "18.0.1.9.0",
+    "version": "18.0.1.9.1",
     "license": "LGPL-3",
 
     "depends": [

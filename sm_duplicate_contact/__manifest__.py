@@ -68,6 +68,8 @@ Website: https://extension.mybroadcast.online
     ],
 
     "images": [
+        "static/description/main_screenshot.png",
+        "static/description/banner.png",
         "static/description/icon.png",
     ],
 

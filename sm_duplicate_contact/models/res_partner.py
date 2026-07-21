@@ -29,18 +29,18 @@ class ResPartner(models.Model):
     def _duplicate_rules(self):
         icp = self.env["ir.config_parameter"].sudo()
         return {
-            "match_name": icp.get_param("duplicate_contact.match_name", "True") == "True",
-            "match_phone": icp.get_param("duplicate_contact.match_phone", "True") == "True",
-            "match_email": icp.get_param("duplicate_contact.match_email", "True") == "True",
-            "match_vat": icp.get_param("duplicate_contact.match_vat", "True") == "True",
-            "match_company": icp.get_param("duplicate_contact.match_company", "True") == "True",
-            "match_website": icp.get_param("duplicate_contact.match_website", "True") == "True",
-            "match_address": icp.get_param("duplicate_contact.match_address", "True") == "True",
+            "match_name": icp.get_param("sm_duplicate_contact.match_name", "True") == "True",
+            "match_phone": icp.get_param("sm_duplicate_contact.match_phone", "True") == "True",
+            "match_email": icp.get_param("sm_duplicate_contact.match_email", "True") == "True",
+            "match_vat": icp.get_param("sm_duplicate_contact.match_vat", "True") == "True",
+            "match_company": icp.get_param("sm_duplicate_contact.match_company", "True") == "True",
+            "match_website": icp.get_param("sm_duplicate_contact.match_website", "True") == "True",
+            "match_address": icp.get_param("sm_duplicate_contact.match_address", "True") == "True",
             "review_threshold": float(
-                icp.get_param("duplicate_contact.review_threshold", "90") or 90
+                icp.get_param("sm_duplicate_contact.review_threshold", "90") or 90
             ),
             "min_threshold": float(
-                icp.get_param("duplicate_contact.min_threshold", "72") or 72
+                icp.get_param("sm_duplicate_contact.min_threshold", "72") or 72
             ),
         }
 
@@ -88,9 +88,9 @@ class ResPartner(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         icp = self.env["ir.config_parameter"].sudo()
-        api_block = icp.get_param("duplicate_contact.api_block", "False") == "True"
-        api_warn = icp.get_param("duplicate_contact.api_warn", "True") == "True"
-        from_api = self.env.context.get("duplicate_contact_api_check")
+        api_block = icp.get_param("sm_duplicate_contact.api_block", "False") == "True"
+        api_warn = icp.get_param("sm_duplicate_contact.api_warn", "True") == "True"
+        from_api = self.env.context.get("sm_duplicate_contact_api_check")
 
         for vals in vals_list:
             if from_api or self.env.context.get("import_file"):
@@ -101,7 +101,7 @@ class ResPartner(models.Model):
                         "Duplicate contact detected (%(conf)s%%): %(name)s"
                         % {"conf": int(best[0]), "name": best[1].display_name}
                     )
-                if matches and api_warn and not self.env.context.get("duplicate_contact_force"):
+                if matches and api_warn and not self.env.context.get("sm_duplicate_contact_force"):
                     best = matches[0]
                     _logger.warning(
                         "Possible duplicate on create: %s (%.0f%%)",

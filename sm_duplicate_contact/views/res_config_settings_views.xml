@@ -7,7 +7,7 @@
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
-                <app string="Duplicate Contacts" name="duplicate_contact" groups="base.group_system">
+                <app string="Duplicate Contacts" name="sm_duplicate_contact" groups="base.group_system">
                     <block title="Matching Rules">
                         <setting string="Name similarity" help="Fuzzy match on contact names">
                             <field name="duplicate_match_name"/>

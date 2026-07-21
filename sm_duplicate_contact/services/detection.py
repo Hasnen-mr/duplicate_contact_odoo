@@ -15,18 +15,18 @@ class DuplicateDetectionService:
     def _get_rules(self):
         icp = self.env["ir.config_parameter"].sudo()
         return {
-            "match_name": icp.get_param("duplicate_contact.match_name", "True") == "True",
-            "match_phone": icp.get_param("duplicate_contact.match_phone", "True") == "True",
-            "match_email": icp.get_param("duplicate_contact.match_email", "True") == "True",
-            "match_vat": icp.get_param("duplicate_contact.match_vat", "True") == "True",
-            "match_company": icp.get_param("duplicate_contact.match_company", "True") == "True",
-            "match_website": icp.get_param("duplicate_contact.match_website", "True") == "True",
-            "match_address": icp.get_param("duplicate_contact.match_address", "True") == "True",
+            "match_name": icp.get_param("sm_duplicate_contact.match_name", "True") == "True",
+            "match_phone": icp.get_param("sm_duplicate_contact.match_phone", "True") == "True",
+            "match_email": icp.get_param("sm_duplicate_contact.match_email", "True") == "True",
+            "match_vat": icp.get_param("sm_duplicate_contact.match_vat", "True") == "True",
+            "match_company": icp.get_param("sm_duplicate_contact.match_company", "True") == "True",
+            "match_website": icp.get_param("sm_duplicate_contact.match_website", "True") == "True",
+            "match_address": icp.get_param("sm_duplicate_contact.match_address", "True") == "True",
             "review_threshold": float(
-                icp.get_param("duplicate_contact.review_threshold", "90") or 90
+                icp.get_param("sm_duplicate_contact.review_threshold", "90") or 90
             ),
             "min_threshold": float(
-                icp.get_param("duplicate_contact.min_threshold", "72") or 72
+                icp.get_param("sm_duplicate_contact.min_threshold", "72") or 72
             ),
         }
 
@@ -50,7 +50,7 @@ class DuplicateDetectionService:
         Pair = self.env["duplicate.contact.pair"].sudo()
         partners = Partner.search([("active", "=", True)], order="id", limit=limit)
         icp = self.env["ir.config_parameter"].sudo()
-        auto_merge = icp.get_param("duplicate_contact.auto_merge", "False") == "True"
+        auto_merge = icp.get_param("sm_duplicate_contact.auto_merge", "False") == "True"
         Merge = None
         if auto_merge:
             from .merge import DuplicateMergeService

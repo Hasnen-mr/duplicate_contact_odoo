@@ -6,13 +6,13 @@
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
-        <field name="context">{'module': 'duplicate_contact'}</field>
+        <field name="context">{'module': 'sm_duplicate_contact'}</field>
     </record>
 
     <menuitem id="menu_duplicate_contact_root"
               name="Duplicate Contacts"
               sequence="45"
-              web_icon="duplicate_contact,static/description/icon.png"
+              web_icon="sm_duplicate_contact,static/description/icon.png"
               groups="base.group_user"/>
 
     <menuitem id="menu_duplicate_contact_dashboard"

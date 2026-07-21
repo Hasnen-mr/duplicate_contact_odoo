@@ -89,7 +89,7 @@ class DuplicateContactPair(models.Model):
         return DuplicateDetectionService(self.env).run_scan(
             limit=int(
                 self.env["ir.config_parameter"].sudo().get_param(
-                    "duplicate_contact.scan_limit", "2000"
+                    "sm_duplicate_contact.scan_limit", "2000"
                 )
                 or 2000
             ),

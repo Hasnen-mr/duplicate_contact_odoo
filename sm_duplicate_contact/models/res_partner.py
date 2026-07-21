@@ -35,7 +35,6 @@ class ResPartner(models.Model):
             "match_vat": icp.get_param("sm_duplicate_contact.match_vat", "True") == "True",
             "match_company": icp.get_param("sm_duplicate_contact.match_company", "True") == "True",
             "match_website": icp.get_param("sm_duplicate_contact.match_website", "True") == "True",
-            "match_address": icp.get_param("sm_duplicate_contact.match_address", "True") == "True",
             "review_threshold": float(
                 icp.get_param("sm_duplicate_contact.review_threshold", "90") or 90
             ),

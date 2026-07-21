@@ -16,11 +16,11 @@ Key Features
 ------------
 * Exact match on Tax ID / GST / VAT / PAN, email, and normalized phone
 * Fuzzy company and contact name matching (Levenshtein, Jaro-Winkler, token sort)
-* Website and address normalization
+* Website normalization
 * Confidence score with Duplicate / Possible Duplicate labels
 * Duplicate dashboard with KPIs
 * Review screen with match reasons
-* Field-by-field merge wizard (name, phone, email, address, notes)
+* Field-by-field merge wizard (name, phone, email, notes)
 * Reassign related records (messages, followers, attachments, CRM, sales, invoices)
 * Merge history audit log
 * Ignore list for intentional duplicates
@@ -47,7 +47,7 @@ Website: https://extension.mybroadcast.online
     "support": "developer.lifetips@gmail.com",
 
     "category": "Sales/CRM",
-    "version": "18.0.1.2.0",
+    "version": "18.0.1.9.0",
     "license": "LGPL-3",
 
     "depends": [

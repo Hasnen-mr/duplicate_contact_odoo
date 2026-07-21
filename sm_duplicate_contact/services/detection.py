@@ -21,7 +21,6 @@ class DuplicateDetectionService:
             "match_vat": icp.get_param("sm_duplicate_contact.match_vat", "True") == "True",
             "match_company": icp.get_param("sm_duplicate_contact.match_company", "True") == "True",
             "match_website": icp.get_param("sm_duplicate_contact.match_website", "True") == "True",
-            "match_address": icp.get_param("sm_duplicate_contact.match_address", "True") == "True",
             "review_threshold": float(
                 icp.get_param("sm_duplicate_contact.review_threshold", "90") or 90
             ),
@@ -135,42 +134,6 @@ class DuplicateDetectionService:
                         "match_reasons": "\n".join("✓ %s" % r for r in reasons),
                         "state": state,
                         "confidence_label": label,
-                        "detection_source": source,
-                    }
-                    _upsert_pair(key, vals, pa, pb)
-
-        # Fuzzy pass on smaller subsets with same city
-        city_groups = {}
-        for partner in partners:
-            city = (partner.city or "").strip().lower()
-            if city:
-                city_groups.setdefault(city, []).append(partner)
-        for group in city_groups.values():
-            if len(group) < 2 or len(group) > 40:
-                continue
-            for i, pa in enumerate(group):
-                for pb in group[i + 1 :]:
-                    key = self._pair_key(pa.id, pb.id)
-                    if key in seen_pairs:
-                        continue
-                    if self._is_ignored(pa.id, pb.id):
-                        continue
-                    confidence, reasons = compare_partners(pa, pb, rules)
-                    if confidence < rules["min_threshold"]:
-                        continue
-                    seen_pairs.add(key)
-                    state = (
-                        "review" if confidence >= rules["review_threshold"] else "open"
-                    )
-                    vals = {
-                        "partner_a_id": key[0],
-                        "partner_b_id": key[1],
-                        "confidence": confidence,
-                        "match_reasons": "\n".join("✓ %s" % r for r in reasons),
-                        "state": state,
-                        "confidence_label": confidence_label(
-                            confidence, rules["review_threshold"]
-                        ),
                         "detection_source": source,
                     }
                     _upsert_pair(key, vals, pa, pb)

@@ -101,12 +101,8 @@ class DuplicateContactPair(models.Model):
         "partner_b_id.commercial_company_name",
         "partner_a_id.street",
         "partner_b_id.street",
-        "partner_a_id.city",
-        "partner_b_id.city",
         "partner_a_id.zip",
         "partner_b_id.zip",
-        "partner_a_id.country_id",
-        "partner_b_id.country_id",
         "confidence",
         "confidence_label",
         "match_reasons",
@@ -141,10 +137,9 @@ class DuplicateContactPair(models.Model):
         parts = [
             partner.street or "",
             partner.street2 or "",
-            partner.city or "",
             partner.zip or "",
             partner.state_id.name if partner.state_id else "",
-            partner.country_id.name if partner.country_id else "",
+            # Country intentionally excluded — same country is not a duplicate signal
         ]
         return ", ".join(part for part in parts if part)
 
@@ -181,6 +176,20 @@ class DuplicateContactPair(models.Model):
             for reason in reasons
         )
         return "<ul class='o_sm_match_list'>%s</ul>" % items
+
+    def action_open_compare(self):
+        """Open the side-by-side comparison screen before merging."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Duplicate Review",
+            "res_model": self._name,
+            "res_id": self.id,
+            "view_mode": "form",
+            "views": [(False, "form")],
+            "target": "current",
+            "context": dict(self.env.context),
+        }
 
     def action_open_merge_wizard(self):
         self.ensure_one()
@@ -280,9 +289,66 @@ class DuplicateContactPair(models.Model):
         }
 
     @api.model
+    def cleanup_stale_matches(self):
+        """Re-score open/review pairs with current rules; remove false positives.
+
+        Especially drops old address/country-only matches (e.g. Similar Address / India).
+        """
+        from ..services.similarity import compare_partners, confidence_label
+
+        icp = self.env["ir.config_parameter"].sudo()
+        rules = {
+            "match_name": icp.get_param("sm_duplicate_contact.match_name", "True") == "True",
+            "match_phone": icp.get_param("sm_duplicate_contact.match_phone", "True") == "True",
+            "match_email": icp.get_param("sm_duplicate_contact.match_email", "True") == "True",
+            "match_vat": icp.get_param("sm_duplicate_contact.match_vat", "True") == "True",
+            "match_company": icp.get_param("sm_duplicate_contact.match_company", "True") == "True",
+            "match_website": icp.get_param("sm_duplicate_contact.match_website", "True") == "True",
+            "review_threshold": float(
+                icp.get_param("sm_duplicate_contact.review_threshold", "90") or 90
+            ),
+            "min_threshold": float(
+                icp.get_param("sm_duplicate_contact.min_threshold", "72") or 72
+            ),
+        }
+        pairs = self.search([("state", "in", ("open", "review"))])
+        removed = updated = 0
+        for pair in pairs:
+            # Hard-drop legacy address-only reasons
+            reasons_text = (pair.match_reasons or "").lower()
+            confidence, reasons = compare_partners(
+                pair.partner_a_id, pair.partner_b_id, rules
+            )
+            # Strip any leftover address wording from reasons
+            reasons = [r for r in reasons if "address" not in r.lower() and "country" not in r.lower()]
+            if confidence < rules["min_threshold"] or not reasons:
+                pair.unlink()
+                removed += 1
+                continue
+            if "similar address" in reasons_text and not any(
+                "address" in r.lower() for r in reasons
+            ):
+                # Was address-based; keep only if still valid on other signals
+                pass
+            state = (
+                "review" if confidence >= rules["review_threshold"] else "open"
+            )
+            pair.write({
+                "confidence": confidence,
+                "match_reasons": "\n".join("✓ %s" % r for r in reasons),
+                "state": state,
+                "confidence_label": confidence_label(
+                    confidence, rules["review_threshold"]
+                ),
+            })
+            updated += 1
+        return {"removed": removed, "updated": updated}
+
+    @api.model
     def cron_detect_duplicates(self):
         from ..services.detection import DuplicateDetectionService
-        return DuplicateDetectionService(self.env).run_scan(
+        self.cleanup_stale_matches()
+        result = DuplicateDetectionService(self.env).run_scan(
             limit=int(
                 self.env["ir.config_parameter"].sudo().get_param(
                     "sm_duplicate_contact.scan_limit", "2000"
@@ -291,3 +357,5 @@ class DuplicateContactPair(models.Model):
             ),
             source="cron",
         )
+        self.env["duplicate.contact.dashboard"].mark_scan_completed()
+        return result

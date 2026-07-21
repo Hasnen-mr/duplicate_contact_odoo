@@ -9,19 +9,26 @@
                   class="o_sm_pair_list"
                   decoration-danger="confidence &gt;= 95"
                   decoration-warning="confidence &gt;= 80 and confidence &lt; 95"
-                  create="0">
+                  create="0"
+                  multi_edit="0"
+                  sample="1">
+                <field name="partner_a_image" widget="image" options="{'size': [40, 40]}" string=" "/>
                 <field name="partner_a_id" string="Contact A"/>
-                <field name="partner_a_phone" optional="show"/>
                 <field name="partner_a_email" optional="show"/>
+                <field name="partner_a_phone" optional="show"/>
+                <field name="partner_a_company" optional="hide" string="Company A"/>
+                <field name="partner_b_image" widget="image" options="{'size': [40, 40]}" string=" "/>
                 <field name="partner_b_id" string="Contact B"/>
+                <field name="partner_b_email" optional="show"/>
                 <field name="partner_b_phone" optional="hide"/>
-                <field name="partner_b_email" optional="hide"/>
-                <field name="confidence" widget="progressbar" options="{'max_value': 100}"/>
+                <field name="partner_b_company" optional="hide" string="Company B"/>
+                <field name="confidence" widget="progressbar" options="{'max_value': 100}" string="Confidence"/>
                 <field name="confidence_label"
                          widget="badge"
                          decoration-danger="confidence_label == 'duplicate'"
                          decoration-warning="confidence_label == 'possible'"
                          decoration-info="confidence_label == 'low'"/>
+                <field name="match_reasons" optional="hide" string="Why matched"/>
                 <field name="state"
                          widget="badge"
                          decoration-warning="state == 'review'"
@@ -29,11 +36,14 @@
                          decoration-success="state == 'merged'"
                          decoration-muted="state in ('ignored', 'not_duplicate')"/>
                 <field name="detection_source" optional="hide"/>
-                <button name="action_open_merge_wizard" type="object" string="Merge"
-                        class="btn-success" icon="fa-code-fork"
+                <button name="action_open_compare" type="object" string="Compare &amp; Merge"
+                        class="btn-primary o_sm_btn_primary"
+                        icon="fa-columns"
+                        title="Open comparison screen before merging"
                         invisible="state not in ('open', 'review')"/>
                 <button name="action_ignore" type="object" string="Ignore"
-                        icon="fa-times" class="btn-link"
+                        icon="fa-ban" class="btn-secondary"
+                        title="Ignore this pair"
                         invisible="state not in ('open', 'review')"/>
             </list>
         </field>
@@ -46,10 +56,14 @@
             <search string="Duplicate Pairs">
                 <field name="partner_a_id"/>
                 <field name="partner_b_id"/>
+                <field name="partner_a_email"/>
+                <field name="partner_b_email"/>
                 <field name="confidence_label"/>
                 <field name="state"/>
+                <field name="match_reasons"/>
                 <filter string="Need Review" name="need_review" domain="[('state', '=', 'review')]"/>
                 <filter string="Open" name="open" domain="[('state', '=', 'open')]"/>
+                <filter string="High Confidence (95%+)" name="high_conf" domain="[('confidence', '&gt;=', 95)]"/>
                 <filter string="Duplicates" name="duplicates" domain="[('confidence_label', '=', 'duplicate')]"/>
                 <filter string="Possible" name="possible" domain="[('confidence_label', '=', 'possible')]"/>
                 <separator/>
@@ -57,6 +71,7 @@
                 <group>
                     <filter string="Label" name="group_label" context="{'group_by': 'confidence_label'}"/>
                     <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Source" name="group_source" context="{'group_by': 'detection_source'}"/>
                 </group>
             </search>
         </field>
@@ -68,14 +83,14 @@
         <field name="arch" type="xml">
             <form string="Duplicate Review" create="0" class="o_sm_compare_form">
                 <header>
-                    <button name="action_open_merge_wizard" type="object" string="Merge"
+                    <button name="action_open_merge_wizard" type="object" string="Continue to Merge"
                             class="btn-primary o_sm_btn_primary"
                             icon="fa-code-fork"
                             invisible="state not in ('open', 'review')"/>
                     <button name="action_ignore" type="object" string="Ignore"
                             icon="fa-ban"
                             invisible="state not in ('open', 'review')"/>
-                    <button name="action_next_pair" type="object" string="Next"
+                    <button name="action_next_pair" type="object" string="Next Pair"
                             icon="fa-arrow-right"
                             class="btn-secondary"/>
                     <button name="action_mark_not_duplicate" type="object" string="Not Duplicate"
@@ -86,10 +101,13 @@
                 <sheet class="o_sm_compare_sheet">
                     <div class="o_sm_compare_header">
                         <div>
-                            <h1 class="o_sm_compare_title">Duplicate Review</h1>
+                            <h1 class="o_sm_compare_title">Compare Contacts</h1>
                             <div class="text-muted" invisible="not review_position">
-                                <field name="review_position" readonly="1" nolabel="1"/>
+                                Pair <field name="review_position" readonly="1" nolabel="1"/>
                             </div>
+                            <p class="o_sm_compare_hint text-muted mb-0">
+                                Review both contacts below. When ready, click <strong>Continue to Merge</strong>.
+                            </p>
                         </div>
                         <div class="o_sm_compare_header_meta">
                             <field name="confidence_label" widget="badge" readonly="1"/>
@@ -117,29 +135,25 @@
                             </div>
                             <div class="o_sm_compare_rows">
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-envelope"/>
+                                    <i class="fa fa-envelope" title="Email"/>
                                     <field name="partner_a_email" readonly="1" nolabel="1" placeholder="—"/>
                                 </div>
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-phone"/>
+                                    <i class="fa fa-phone" title="Phone"/>
                                     <field name="partner_a_phone" readonly="1" nolabel="1" placeholder="—"/>
                                     <span invisible="not partner_a_mobile"> / </span>
                                     <field name="partner_a_mobile" readonly="1" nolabel="1"/>
                                 </div>
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-building"/>
+                                    <i class="fa fa-building" title="Company"/>
                                     <field name="partner_a_company" readonly="1" nolabel="1" placeholder="—"/>
                                 </div>
-                                <div class="o_sm_compare_row">
-                                    <i class="fa fa-map-marker"/>
-                                    <field name="partner_a_address" readonly="1" nolabel="1" placeholder="—"/>
-                                </div>
                                 <div class="o_sm_compare_row" invisible="not partner_a_website">
-                                    <i class="fa fa-globe"/>
+                                    <i class="fa fa-globe" title="Website"/>
                                     <field name="partner_a_website" readonly="1" nolabel="1"/>
                                 </div>
                                 <div class="o_sm_compare_row" invisible="not partner_a_vat">
-                                    <i class="fa fa-id-card-o"/>
+                                    <i class="fa fa-id-card-o" title="Tax ID"/>
                                     <field name="partner_a_vat" readonly="1" nolabel="1"/>
                                 </div>
                             </div>
@@ -164,6 +178,12 @@
                                 <field name="match_reasons" nolabel="1" readonly="1"/>
                                 <field name="confidence" readonly="1"/>
                             </div>
+                            <div class="o_sm_compare_center_actions mt-3">
+                                <button name="action_open_merge_wizard" type="object" string="Continue to Merge"
+                                        class="btn btn-primary o_sm_btn_primary w-100"
+                                        icon="fa-code-fork"
+                                        invisible="state not in ('open', 'review')"/>
+                            </div>
                         </div>
 
                         <!-- Contact B -->
@@ -185,29 +205,25 @@
                             </div>
                             <div class="o_sm_compare_rows">
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-envelope"/>
+                                    <i class="fa fa-envelope" title="Email"/>
                                     <field name="partner_b_email" readonly="1" nolabel="1" placeholder="—"/>
                                 </div>
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-phone"/>
+                                    <i class="fa fa-phone" title="Phone"/>
                                     <field name="partner_b_phone" readonly="1" nolabel="1" placeholder="—"/>
                                     <span invisible="not partner_b_mobile"> / </span>
                                     <field name="partner_b_mobile" readonly="1" nolabel="1"/>
                                 </div>
                                 <div class="o_sm_compare_row">
-                                    <i class="fa fa-building"/>
+                                    <i class="fa fa-building" title="Company"/>
                                     <field name="partner_b_company" readonly="1" nolabel="1" placeholder="—"/>
                                 </div>
-                                <div class="o_sm_compare_row">
-                                    <i class="fa fa-map-marker"/>
-                                    <field name="partner_b_address" readonly="1" nolabel="1" placeholder="—"/>
-                                </div>
                                 <div class="o_sm_compare_row" invisible="not partner_b_website">
-                                    <i class="fa fa-globe"/>
+                                    <i class="fa fa-globe" title="Website"/>
                                     <field name="partner_b_website" readonly="1" nolabel="1"/>
                                 </div>
                                 <div class="o_sm_compare_row" invisible="not partner_b_vat">
-                                    <i class="fa fa-id-card-o"/>
+                                    <i class="fa fa-id-card-o" title="Tax ID"/>
                                     <field name="partner_b_vat" readonly="1" nolabel="1"/>
                                 </div>
                             </div>
@@ -217,7 +233,7 @@
                     </div>
 
                     <div class="o_sm_compare_footer">
-                        <button name="action_open_merge_wizard" type="object" string="Merge"
+                        <button name="action_open_merge_wizard" type="object" string="Continue to Merge"
                                 class="btn btn-primary o_sm_btn_primary o_sm_footer_btn"
                                 icon="fa-code-fork"
                                 invisible="state not in ('open', 'review')"/>
@@ -225,12 +241,11 @@
                                 class="btn btn-secondary o_sm_footer_btn"
                                 icon="fa-ban"
                                 invisible="state not in ('open', 'review')"/>
-                        <button name="action_next_pair" type="object" string="Next"
+                        <button name="action_next_pair" type="object" string="Next Pair"
                                 class="btn btn-secondary o_sm_footer_btn o_sm_footer_next"
                                 icon="fa-arrow-right"/>
                     </div>
 
-                    <!-- Hidden technical fields -->
                     <group invisible="1">
                         <field name="partner_a_id"/>
                         <field name="partner_b_id"/>
@@ -248,12 +263,14 @@
         <field name="view_mode">list,form</field>
         <field name="domain">[('state', 'in', ('open', 'review'))]</field>
         <field name="context">{'search_default_active_pairs': 1}</field>
+        <field name="limit">20</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                No duplicate pairs found
+                Congratulations! No duplicate records found
             </p>
             <p>
-                Run a scan from the Dashboard to detect duplicate contacts.
+                Your contact database looks clean.
+                Use <strong>Manual Scan</strong> from the Dashboard, or wait for the next <strong>Auto Scan</strong>.
             </p>
         </field>
     </record>

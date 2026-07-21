@@ -73,6 +73,7 @@ def normalize_company(value):
         (r"\btechnology\b", "tech"),
         (r"\bincorporated\b", "inc"),
         (r"\bcorporation\b", "corp"),
+        (r"\bcompany\b", "co"),
     )
     for pattern, repl in replacements:
         text = re.sub(pattern, repl, text)
@@ -80,9 +81,25 @@ def normalize_company(value):
     return re.sub(r"\s+", " ", text).strip()
 
 
-def normalize_address_parts(street=False, city=False, zip_code=False):
-    parts = []
-    for part in (street, city, zip_code):
-        if part:
-            parts.append(re.sub(r"\s+", " ", str(part).strip().lower()))
-    return " ".join(parts)
+# Generic / legal words that must not make two different brands look similar.
+COMPANY_STOPWORDS = frozenset({
+    "inc", "ltd", "llc", "llp", "corp", "co", "company", "companies",
+    "solutions", "solution", "services", "service", "group", "groups",
+    "international", "global", "private", "pvt", "limited",
+    "technologies", "technology", "tech", "systems", "system",
+    "enterprises", "enterprise", "industries", "industry",
+    "holdings", "holding", "partners", "partner", "associates",
+    "consulting", "consultancy", "agency", "studio", "labs", "lab",
+    "the", "and", "of", "for",
+})
+
+
+def company_core_tokens(normalized_name):
+    """Return distinctive tokens after removing legal/generic company words."""
+    if not normalized_name:
+        return []
+    return [
+        token
+        for token in normalized_name.split()
+        if token not in COMPANY_STOPWORDS and len(token) > 1
+    ]

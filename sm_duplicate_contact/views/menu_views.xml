@@ -15,6 +15,12 @@
               web_icon="sm_duplicate_contact,static/description/icon.png"
               groups="base.group_user"/>
 
+    <menuitem id="menu_duplicate_contact_contacts"
+              name="Contacts"
+              parent="menu_duplicate_contact_root"
+              action="contacts.action_contacts"
+              sequence="25"/>
+
     <menuitem id="menu_duplicate_contact_dashboard"
               name="Dashboard"
               parent="menu_duplicate_contact_root"

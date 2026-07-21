@@ -7,6 +7,9 @@
         <field name="arch" type="xml">
             <form string="Duplicate Contact Manager" create="0" edit="0" delete="0" class="o_sm_dashboard">
                 <sheet>
+                    <field name="has_pairs" invisible="1"/>
+                    <field name="auto_scan_enabled" invisible="1"/>
+
                     <div class="oe_title mb-3">
                         <h1 class="o_sm_dashboard_title">Smart Duplicate Contact Manager</h1>
                         <p class="text-muted mb-0">
@@ -17,42 +20,134 @@
                     <div class="o_sm_kpi_row row g-3 mb-4">
                         <div class="col-md-3 col-6">
                             <div class="o_sm_kpi_card o_sm_kpi_total">
-                                <div class="o_sm_kpi_icon"><i class="fa fa-users"/></div>
+                                <div class="o_sm_kpi_icon"><i class="fa fa-users" title="Total Contacts"/></div>
                                 <div class="o_sm_kpi_label">Total Contacts</div>
                                 <field name="total_contacts" class="o_sm_kpi_value"/>
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
                             <div class="o_sm_kpi_card o_sm_kpi_duplicates">
-                                <div class="o_sm_kpi_icon"><i class="fa fa-clone"/></div>
+                                <div class="o_sm_kpi_icon"><i class="fa fa-clone" title="Duplicates"/></div>
                                 <div class="o_sm_kpi_label">Duplicates Found</div>
                                 <field name="duplicates_found" class="o_sm_kpi_value"/>
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
                             <div class="o_sm_kpi_card o_sm_kpi_review">
-                                <div class="o_sm_kpi_icon"><i class="fa fa-eye"/></div>
+                                <div class="o_sm_kpi_icon"><i class="fa fa-eye" title="Need Review"/></div>
                                 <div class="o_sm_kpi_label">Need Review</div>
                                 <field name="need_review" class="o_sm_kpi_value"/>
                             </div>
                         </div>
                         <div class="col-md-3 col-6">
                             <div class="o_sm_kpi_card o_sm_kpi_merged">
-                                <div class="o_sm_kpi_icon"><i class="fa fa-check-circle"/></div>
+                                <div class="o_sm_kpi_icon"><i class="fa fa-check-circle" title="Merged"/></div>
                                 <div class="o_sm_kpi_label">Merged</div>
                                 <field name="merged_count" class="o_sm_kpi_value"/>
                             </div>
                         </div>
                     </div>
 
-                    <div class="o_sm_dashboard_actions d-flex flex-wrap gap-2 align-items-center">
-                        <button name="action_run_scan" type="object" string="Run Scan Now" class="btn btn-primary o_sm_btn_primary"/>
-                        <button name="action_open_duplicates" type="object" string="Review Duplicates" class="btn btn-secondary"/>
-                        <button name="action_open_review" type="object" string="Need Review" class="btn btn-secondary"/>
+                    <div class="o_sm_dashboard_actions d-flex flex-wrap gap-2 align-items-center mb-4">
+                        <button name="action_run_scan" type="object" string="Manual Scan" class="btn btn-primary o_sm_btn_primary"/>
+                        <button name="action_refresh_pairs" type="object" string="Refresh" class="btn btn-secondary"/>
+                        <button name="action_open_duplicates" type="object" string="Open Full List" class="btn btn-secondary"
+                                invisible="not has_pairs"/>
+                        <button name="action_open_review" type="object" string="Need Review" class="btn btn-secondary"
+                                invisible="need_review == 0"/>
                         <button name="action_open_merged" type="object" string="Merge History" class="btn btn-link"/>
                         <span class="text-muted ms-auto small" invisible="ignored_count == 0">
                             Ignored: <field name="ignored_count" class="oe_inline"/>
                         </span>
+                    </div>
+
+                    <div class="o_sm_dashboard_pairs">
+                        <div class="o_sm_pairs_header d-flex align-items-center justify-content-between mb-2"
+                             invisible="not has_pairs">
+                            <h3 class="o_sm_pairs_title mb-0">Duplicate Pairs</h3>
+                            <div class="o_sm_pairs_pager d-flex align-items-center gap-2">
+                                <field name="pair_page_info" readonly="1" nolabel="1" class="text-muted small"/>
+                                <field name="pair_page" invisible="1"/>
+                                <field name="pair_page_count" invisible="1"/>
+                                <button name="action_pair_page_prev" type="object" string="Previous"
+                                        class="btn btn-secondary btn-sm"
+                                        invisible="pair_page &lt;= 1"/>
+                                <button name="action_pair_page_next" type="object" string="Next"
+                                        class="btn btn-secondary btn-sm"
+                                        invisible="pair_page &gt;= pair_page_count"/>
+                            </div>
+                        </div>
+
+                        <!-- Empty state -->
+                        <div class="o_sm_empty_state" invisible="has_pairs">
+                            <div class="o_sm_empty_icon">
+                                <i class="fa fa-check-circle" title="No duplicates"/>
+                            </div>
+                            <h2 class="o_sm_empty_title">Congratulations!</h2>
+                            <p class="o_sm_empty_text">
+                                No duplicate records found. Your contact database looks clean.
+                            </p>
+
+                            <div class="o_sm_scan_cards row g-3 mt-3">
+                                <div class="col-md-6">
+                                    <div class="o_sm_scan_card">
+                                        <div class="o_sm_scan_card_label">
+                                            <i class="fa fa-search" title="Manual Scan"/> Manual Scan
+                                        </div>
+                                        <div class="o_sm_scan_card_time">
+                                            Last Scan: <field name="last_scan_display" readonly="1" nolabel="1"/>
+                                        </div>
+                                        <button name="action_run_scan" type="object" string="Run Manual Scan"
+                                                class="btn btn-primary o_sm_btn_primary mt-2"/>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="o_sm_scan_card">
+                                        <div class="o_sm_scan_card_label">
+                                            <i class="fa fa-clock-o" title="Auto Scan"/> Auto Scan
+                                        </div>
+                                        <div class="o_sm_scan_card_time">
+                                            Next Scan: <field name="next_scan_display" readonly="1" nolabel="1"/>
+                                        </div>
+                                        <button name="action_open_auto_scan_settings" type="object"
+                                                string="Configure Auto Scan"
+                                                class="btn btn-secondary mt-2"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <field name="pair_ids" nolabel="1" mode="list" options="{'no_create': True}"
+                                 invisible="not has_pairs">
+                            <list create="0" delete="0" edit="0" limit="20"
+                                  decoration-danger="confidence &gt;= 95"
+                                  decoration-warning="confidence &gt;= 80 and confidence &lt; 95">
+                                <field name="partner_a_image" widget="image" options="{'size': [32, 32]}" string=" "/>
+                                <field name="partner_a_id" string="Contact A"/>
+                                <field name="partner_a_email" optional="show"/>
+                                <field name="partner_b_image" widget="image" options="{'size': [32, 32]}" string=" "/>
+                                <field name="partner_b_id" string="Contact B"/>
+                                <field name="partner_b_email" optional="hide"/>
+                                <field name="confidence" widget="progressbar" options="{'max_value': 100}"/>
+                                <field name="confidence_label"
+                                         widget="badge"
+                                         decoration-danger="confidence_label == 'duplicate'"
+                                         decoration-warning="confidence_label == 'possible'"
+                                         decoration-info="confidence_label == 'low'"/>
+                                <field name="state"
+                                         widget="badge"
+                                         decoration-warning="state == 'review'"
+                                         decoration-info="state == 'open'"/>
+                                <button name="action_open_compare" type="object" string="Compare &amp; Merge"
+                                        class="btn-primary o_sm_btn_primary"
+                                        icon="fa-columns"
+                                        title="Open comparison screen before merging"
+                                        invisible="state not in ('open', 'review')"/>
+                                <button name="action_ignore" type="object" string="Ignore"
+                                        icon="fa-ban" class="btn-secondary"
+                                        invisible="state not in ('open', 'review')"/>
+                            </list>
+                        </field>
                     </div>
                 </sheet>
             </form>

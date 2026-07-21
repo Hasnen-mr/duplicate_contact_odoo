@@ -4,7 +4,7 @@
 from difflib import SequenceMatcher
 
 from .normalization import (
-    normalize_address_parts,
+    company_core_tokens,
     normalize_company,
     normalize_email,
     normalize_name,
@@ -14,6 +14,10 @@ from .normalization import (
 )
 
 EXACT_CONFIDENCE = 100.0
+
+# Company/name matches must clear this after stripping legal/generic words.
+COMPANY_CORE_MIN = 88.0
+NAME_MIN = 82.0
 
 
 def _ratio(a, b):
@@ -76,8 +80,69 @@ def _jaro_winkler(s1, s2, prefix_scale=0.1):
     return (jaro + prefix * prefix_scale * (1 - jaro)) * 100.0
 
 
+def _company_similarity(ca, cb):
+    """Compare company names using distinctive core tokens only.
+
+    Shared legal/generic words (Inc, Solutions, Ltd, …) must not create a match.
+    Example: "Spearhead Solutions Inc" vs "Pantar Solutions Inc" → not similar.
+    """
+    if not ca or not cb:
+        return 0.0
+    if ca == cb:
+        return 100.0
+
+    core_a = company_core_tokens(ca)
+    core_b = company_core_tokens(cb)
+
+    # Only generic words left — require near-exact full string
+    if not core_a or not core_b:
+        full = _ratio(ca, cb)
+        return full if full >= 95.0 else 0.0
+
+    set_a, set_b = set(core_a), set(core_b)
+    shared = set_a & set_b
+    if not shared:
+        # No shared distinctive word (spearhead vs pantar) → reject
+        first = max(_ratio(core_a[0], core_b[0]), _jaro_winkler(core_a[0], core_b[0]))
+        if first < COMPANY_CORE_MIN:
+            return 0.0
+
+    core_str_a = " ".join(core_a)
+    core_str_b = " ".join(core_b)
+    core_score = max(
+        _token_sort_ratio(core_str_a, core_str_b),
+        _jaro_winkler(core_str_a, core_str_b),
+    )
+    if core_score < COMPANY_CORE_MIN:
+        return 0.0
+
+    # Prefer core score; do not let generic suffixes inflate the result
+    return core_score
+
+
+def _name_similarity(na, nb):
+    """Person/contact name similarity with company-style stopword stripping."""
+    if not na or not nb:
+        return 0.0
+    if na == nb:
+        return 100.0
+
+    tokens_a, tokens_b = na.split(), nb.split()
+    core_a = company_core_tokens(na)
+    core_b = company_core_tokens(nb)
+    # Company-like names (generic legal words were stripped)
+    if len(core_a) < len(tokens_a) or len(core_b) < len(tokens_b):
+        return _company_similarity(na, nb)
+
+    score = max(_token_sort_ratio(na, nb), _jaro_winkler(na, nb))
+    return score if score >= NAME_MIN else 0.0
+
+
 def compare_partners(partner_a, partner_b, rules=None):
-    """Return confidence score 0-100 and list of match reason strings."""
+    """Return confidence score 0-100 and list of match reason strings.
+
+    Address and country are intentionally never used for matching.
+    """
     rules = rules or {}
     reasons = []
     scores = []
@@ -91,16 +156,13 @@ def compare_partners(partner_a, partner_b, rules=None):
     if rule_on("match_vat") and vat_a and vat_b and vat_a == vat_b:
         return EXACT_CONFIDENCE, ["Same Tax ID / GST / VAT"]
 
-    # Email
+    # Email — exact match only (same domain alone is not a duplicate)
     if rule_on("match_email"):
         ea = normalize_email(partner_a.email)
         eb = normalize_email(partner_b.email)
-        if ea and eb:
-            if ea == eb:
-                reasons.append("Same Email")
-                scores.append(100.0)
-            elif ea.split("@")[-1] == eb.split("@")[-1]:
-                scores.append(75.0)
+        if ea and eb and ea == eb:
+            reasons.append("Same Email")
+            scores.append(100.0)
 
     # Phone / mobile
     if rule_on("match_phone"):
@@ -116,48 +178,31 @@ def compare_partners(partner_a, partner_b, rules=None):
             reasons.append("Same Phone")
             scores.append(98.0)
 
-    # Website
+    # Website — exact root domain only
     if rule_on("match_website"):
         wa = normalize_website(partner_a.website)
         wb = normalize_website(partner_b.website)
-        if wa and wb:
-            if wa == wb:
-                reasons.append("Same Website")
-                scores.append(95.0)
-            else:
-                site_score = _ratio(wa, wb)
-                if site_score >= 85:
-                    scores.append(site_score)
+        if wa and wb and wa == wb:
+            reasons.append("Same Website")
+            scores.append(95.0)
 
-    # Company name (for companies or parent)
+    # Company name (distinctive core tokens only; ignore Inc/Solutions/etc.)
     if rule_on("match_company"):
         ca = normalize_company(partner_a.commercial_company_name or partner_a.name)
         cb = normalize_company(partner_b.commercial_company_name or partner_b.name)
-        if ca and cb:
-            company_score = max(_token_sort_ratio(ca, cb), _jaro_winkler(ca, cb))
-            if company_score >= 80:
-                reasons.append("Similar Company")
-                scores.append(company_score)
+        company_score = _company_similarity(ca, cb)
+        if company_score >= COMPANY_CORE_MIN:
+            reasons.append("Similar Company")
+            scores.append(company_score)
 
     # Contact name
     if rule_on("match_name"):
         na = normalize_name(partner_a.name)
         nb = normalize_name(partner_b.name)
-        if na and nb:
-            name_score = max(_token_sort_ratio(na, nb), _jaro_winkler(na, nb))
-            if name_score >= 75:
-                reasons.append("Similar Name")
-                scores.append(name_score)
-
-    # Address
-    if rule_on("match_address"):
-        aa = normalize_address_parts(partner_a.street, partner_a.city, partner_a.zip)
-        ab = normalize_address_parts(partner_b.street, partner_b.city, partner_b.zip)
-        if aa and ab:
-            addr_score = _token_sort_ratio(aa, ab)
-            if addr_score >= 80:
-                reasons.append("Similar Address")
-                scores.append(addr_score)
+        name_score = _name_similarity(na, nb)
+        if name_score >= NAME_MIN:
+            reasons.append("Similar Name")
+            scores.append(name_score)
 
     if not scores:
         return 0.0, []

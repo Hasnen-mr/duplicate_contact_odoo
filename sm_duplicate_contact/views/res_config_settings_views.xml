@@ -27,9 +27,6 @@
                         <setting string="Website normalization" help="Compare root domains">
                             <field name="duplicate_match_website"/>
                         </setting>
-                        <setting string="Address similarity" help="Street, city, and ZIP comparison">
-                            <field name="duplicate_match_address"/>
-                        </setting>
                         <setting string="AI similarity" help="Reserved for future AI-assisted matching">
                             <field name="duplicate_match_ai"/>
                         </setting>

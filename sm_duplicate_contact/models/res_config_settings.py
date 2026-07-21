@@ -35,11 +35,6 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="sm_duplicate_contact.match_website",
         default=True,
     )
-    duplicate_match_address = fields.Boolean(
-        string="Match Address",
-        config_parameter="sm_duplicate_contact.match_address",
-        default=True,
-    )
     duplicate_match_ai = fields.Boolean(
         string="AI Similarity (when inconclusive)",
         config_parameter="sm_duplicate_contact.match_ai",
@@ -91,7 +86,10 @@ class ResConfigSettings(models.TransientModel):
 
     def action_run_duplicate_scan(self):
         from ..services.detection import DuplicateDetectionService
+        Pair = self.env["duplicate.contact.pair"].sudo()
+        Pair.cleanup_stale_matches()
         stats = DuplicateDetectionService(self.env).run_scan(source="manual")
+        self.env["duplicate.contact.dashboard"].mark_scan_completed()
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -102,3 +100,33 @@ class ResConfigSettings(models.TransientModel):
                 "sticky": False,
             },
         }
+
+    def set_values(self):
+        super().set_values()
+        self._sync_duplicate_cron()
+
+    def _sync_duplicate_cron(self):
+        cron = self.env.ref(
+            "sm_duplicate_contact.ir_cron_duplicate_contact_scan",
+            raise_if_not_found=False,
+        )
+        if not cron:
+            return
+        interval = self.duplicate_cron_interval or self.env["ir.config_parameter"].sudo().get_param(
+            "sm_duplicate_contact.cron_interval", "daily"
+        )
+        mapping = {
+            "hourly": (1, "hours"),
+            "daily": (1, "days"),
+            "weekly": (1, "weeks"),
+            "monthly": (1, "months"),
+        }
+        if interval == "off":
+            cron.active = False
+            return
+        number, itype = mapping.get(interval, (1, "days"))
+        cron.write({
+            "active": True,
+            "interval_number": number,
+            "interval_type": itype,
+        })
